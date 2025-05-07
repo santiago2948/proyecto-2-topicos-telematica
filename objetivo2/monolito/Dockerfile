@@ -10,8 +10,8 @@ COPY . .
 # Instala las dependencias
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Expone el puerto 5000 para Flask
-EXPOSE 5000
+# Expone el puerto 80 para Flask
+EXPOSE 80
 
 # Comando para correr la app
 CMD ["python", "app.py"]

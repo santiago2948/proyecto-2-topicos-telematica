@@ -26,7 +26,7 @@ services:
       - DB_PASS=Salinitrato10.
       - DB_NAME=bookstore
     ports:
-      - "5000:5000"
+      - "80:80"
     depends_on:
       - db
     volumes:
@@ -39,3 +39,4 @@ volumes:
 
 networks:
   bookstore_net:
+
