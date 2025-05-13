@@ -1,69 +1,45 @@
-from flask import Blueprint, render_template, request, redirect, url_for
-from models.book import Book
-
-from extensions import db
-#from app import db
-from flask_login import login_required, current_user
+from flask import Blueprint, request, jsonify
+import requests
+from utils.generals import MICROSERVICE_2_URL, MICROSERVICE_3_URL
 
 book = Blueprint('book', __name__)
 
-#@book.route('/')
-#@login_required
-#def home():
-#    return render_template('home.html')
-
-#@book.route('/')
-@book.route('/catalog')
+@book.route('/catalog', methods=['GET'])
 def catalog():
-    books = Book.query.all()
-    return render_template('catalog.html', books=books)
+    try:
+        response = requests.get(f"{MICROSERVICE_2_URL}/book/catalog")
+        return (response.content, response.status_code, response.headers.items())
+    except requests.exceptions.RequestException as e:
+        return jsonify({"success": False, "message": "Error connecting to microservice 2"}), 500
 
-@book.route('/my_books')
-@login_required
+@book.route('/my_books', methods=['POST'])
 def my_books():
-    books = Book.query.filter_by(seller_id=current_user.id).all()
-    return render_template('my_books.html', books=books)
+    try:
+        response = requests.post(f"{MICROSERVICE_2_URL}/book/my_books", json=request.json)
+        return (response.content, response.status_code, response.headers.items())
+    except requests.exceptions.RequestException as e:
+        return jsonify({"success": False, "message": "Error connecting to microservice 2"}), 500
 
-@book.route('/add_book', methods=['GET', 'POST'])
-@login_required
+@book.route('/add_book', methods=['POST'])
 def add_book():
-    if request.method == 'POST':
-        title = request.form.get('title')
-        author = request.form.get('author')
-        description = request.form.get('description')
-        price = float(request.form.get('price'))
-        stock = int(request.form.get('stock'))
-        new_book = Book(title=title, author=author, description=description, price=price, stock=stock, seller_id=current_user.id)
-        db.session.add(new_book)
-        db.session.commit()
-        return redirect(url_for('book.catalog'))
-    return render_template('add_book.html')
+    try:
+        response = requests.post(f"{MICROSERVICE_3_URL}/book/add_book", json=request.json)
+        return (response.content, response.status_code, response.headers.items())
+    except requests.exceptions.RequestException as e:
+        return jsonify({"success": False, "message": "Error connecting to microservice 3"}), 500
 
-@book.route('/edit_book/<int:book_id>', methods=['GET', 'POST'])
-@login_required
+@book.route('/edit_book/<int:book_id>', methods=['POST'])
 def edit_book(book_id):
-    book_to_edit = Book.query.get_or_404(book_id)
-    if book_to_edit.seller_id != current_user.id:
-        return "No tienes permiso para editar este libro.", 403
-
-    if request.method == 'POST':
-        book_to_edit.title = request.form.get('title')
-        book_to_edit.author = request.form.get('author')
-        book_to_edit.description = request.form.get('description')
-        book_to_edit.price = float(request.form.get('price'))
-        book_to_edit.stock = int(request.form.get('stock'))
-        db.session.commit()
-        return redirect(url_for('book.catalog'))
-
-    return render_template('edit_book.html', book=book_to_edit)
+    try:
+        response = requests.post(f"{MICROSERVICE_3_URL}/book/edit_book/{book_id}", json=request.json)
+        return (response.content, response.status_code, response.headers.items())
+    except requests.exceptions.RequestException as e:
+        return jsonify({"success": False, "message": "Error connecting to microservice 3"}), 500
 
 @book.route('/delete_book/<int:book_id>', methods=['POST'])
-@login_required
 def delete_book(book_id):
-    book_to_delete = Book.query.get_or_404(book_id)
-    if book_to_delete.seller_id != current_user.id:
-        return "No tienes permiso para eliminar este libro.", 403
-
-    db.session.delete(book_to_delete)
-    db.session.commit()
-    return redirect(url_for('book.catalog'))
+    try:
+        response = requests.post(f"{MICROSERVICE_3_URL}/book/delete_book/{book_id}", json=request.json)
+        return (response.content, response.status_code, response.headers.items())
+    except requests.exceptions.RequestException as e:
+        return jsonify({"success": False, "message": "Error connecting to microservice 3"}), 500

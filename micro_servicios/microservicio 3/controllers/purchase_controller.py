@@ -2,17 +2,15 @@ from flask import Blueprint, request, redirect, url_for
 from models.purchase import Purchase
 from models.book import Book
 from extensions import db
-#from app import db
-from flask_login import login_required, current_user
+from utils.response import response
 
 purchase = Blueprint('purchase', __name__)
 
 @purchase.route('/buy/<int:book_id>', methods=['POST'])
-@login_required
 def buy(book_id):
-    quantity = int(request.form.get('quantity'))
-    price = float(request.form.get('price'))
-
+    data = request.json
+    quantity = int(data['quantity'])
+    price = float(data['price'])
     book = Book.query.get_or_404(book_id)
 
     if book.stock < quantity:
@@ -21,7 +19,7 @@ def buy(book_id):
     total_price = price * quantity
 
     new_purchase = Purchase(
-        user_id=current_user.id,
+        user_id=data["user_id"],
         book_id=book_id,
         quantity=quantity,
         total_price=total_price,
@@ -30,5 +28,5 @@ def buy(book_id):
     book.stock -= quantity  # Reducir stock
     db.session.add(new_purchase)
     db.session.commit()
-
-    return redirect(url_for('payment.payment_page', purchase_id=new_purchase.id))
+    
+    return response(True, "Compra realizada con éxito", {"purchase_id": new_purchase.id, "total_price": total_price})

@@ -9,3 +9,14 @@ class Book(db.Model):
     price = db.Column(db.Float)
     stock = db.Column(db.Integer)
     seller_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "title": self.title,
+            "author": self.author,
+            "description": self.description,
+            "price": self.price,
+            "stock": self.stock,
+            "seller_id": self.seller_id
+        }

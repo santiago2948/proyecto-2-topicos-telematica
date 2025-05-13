@@ -1,22 +1,19 @@
-from flask import Blueprint, render_template, request, redirect, url_for
+from flask import Blueprint, jsonify, request
 from models.delivery import DeliveryProvider
-from extensions import db
-from flask_login import login_required
 from models.delivery_assignment import DeliveryAssignment
-
+from extensions import db
 
 delivery = Blueprint('delivery', __name__)
 
-@delivery.route('/delivery/<int:purchase_id>', methods=['GET', 'POST'])
-@login_required
-def select_delivery(purchase_id):
+@delivery.route('/providers', methods=['GET'])
+def get_providers():
     providers = DeliveryProvider.query.all()
-    if request.method == 'POST':
-        selected_provider_id = request.form.get('provider')
-        
-        new_assignment = DeliveryAssignment(purchase_id=purchase_id, provider_id=selected_provider_id)
-        db.session.add(new_assignment)
-        db.session.commit()
-        
-        return redirect(url_for('book.catalog'))
-    return render_template('delivery_options.html', providers=providers, purchase_id=purchase_id)
+    return jsonify({"success": True, "data": [provider.to_dict() for provider in providers]})
+
+@delivery.route('/assign/<int:purchase_id>', methods=['POST'])
+def assign_delivery(purchase_id):
+    provider_id = request.json.get('provider_id')
+    new_assignment = DeliveryAssignment(purchase_id=purchase_id, provider_id=provider_id)
+    db.session.add(new_assignment)
+    db.session.commit()
+    return jsonify({"success": True, "message": "Delivery assigned successfully"})
