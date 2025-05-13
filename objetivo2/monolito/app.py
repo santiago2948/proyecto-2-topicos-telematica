@@ -5,7 +5,17 @@ import os
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secretkey'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///bookstore.db'
+
+# Configuración dinámica de la base de datos
+db_user = os.environ.get('DB_USER')
+db_pass = os.environ.get('DB_PASS')
+db_host = os.environ.get('DB_HOST')
+db_name = os.environ.get('DB_NAME')
+
+if db_user and db_pass and db_host and db_name:
+    app.config['SQLALCHEMY_DATABASE_URI'] = f'mysql+pymysql://{db_user}:{db_pass}@{db_host}/{db_name}'
+else:
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///bookstore.db'
 
 # Configuración para usar EFS
 EFS_DIRECTORY = '/mnt/efs/uploads'

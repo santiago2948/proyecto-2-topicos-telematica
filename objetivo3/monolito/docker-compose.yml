@@ -28,10 +28,10 @@ services:
     restart: always
     environment:
       - FLASK_ENV=development
-      - DB_HOST=database-objective-2.c9wuu22ec2ri.us-east-1.rds.amazonaws.com
-      - DB_USER=admin
-      - DB_PASS=Salinitrato10.
-      - DB_NAME=bookstore
+      - DB_HOST=${DB_HOST:-database-objective-2.c9wuu22ec2ri.us-east-1.rds.amazonaws.com}
+      - DB_USER=${DB_USER:-admin}
+      - DB_PASS=${DB_PASS:-Salinitrato10.}
+      - DB_NAME=${DB_NAME:-bookstore}
     ports:
       - "80:80"
     depends_on:
