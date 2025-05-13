@@ -1,0 +1,9 @@
+flask
+flask_sqlalchemy
+flask_login
+pymysql
+werkzeug
+
+
+ docker swarm join --token SWMTKN-1-1ib8zt02ydo31exfj0h5cgiqh668w67nl14lvk6pvs9f3hzeos-4dkgcr5pb8o6dciinqkabun07 172.31.20.10:2377 
+ docker swarm join-token worker

@@ -1,0 +1,108 @@
+version: '3.8'
+
+services:
+  db:
+    image: mysql:8
+    restart: always
+    environment:
+      MYSQL_DATABASE: bookstore
+      MYSQL_USER: bookstore_user
+      MYSQL_PASSWORD: bookstore_pass
+      MYSQL_ROOT_PASSWORD: root_pass
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - bookstore_net
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints:
+          - node.role == manager
+
+  flaskapp:
+    build: .
+    restart: always
+    environment:
+      - FLASK_ENV=development
+      - DB_HOST=database-objective-2.c9wuu22ec2ri.us-east-1.rds.amazonaws.com
+      - DB_USER=admin
+      - DB_PASS=Salinitrato10.
+      - DB_NAME=bookstore
+    ports:
+      - "80:80"
+    depends_on:
+      - db
+    volumes:
+      - /mnt/efs:/mnt/efs  # Monta el EFS en el contenedor
+    networks:
+      - bookstore_net
+    deploy:
+      replicas: 2
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints:
+          - node.role == worker
+
+  setup:
+    image: python:3.10-slim
+    depends_on:
+      - db
+    volumes:
+      - .:/app
+    working_dir: /app
+    entrypoint: >
+      sh -c "
+      apt-get update &&
+      apt-get install -y nfs-common &&
+      mkdir -p /mnt/efs &&
+      mount -t nfs4 -o nfsvers=4.1 fs-015fb9d53f7395e8d.efs.us-east-1.amazonaws.com:/ /mnt/efs &&
+      flask shell -c 'from extensions import db; db.create_all()'
+      "
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints:
+          - node.role == manager
+
+  verifier:
+    image: python:3.10-slim
+    depends_on:
+      - db
+    volumes:
+      - .:/app
+    working_dir: /app
+    entrypoint: >
+      sh -c "
+      echo 'Verificando configuración de Docker Swarm...' &&
+      docker info | grep 'Swarm: active' || (echo 'Swarm no está activo. Activando...' && docker swarm init) &&
+      echo 'Verificando nodos del clúster...' &&
+      docker node ls &&
+      echo 'Verificando acceso a EFS...' &&
+      apt-get update &&
+      apt-get install -y nfs-common &&
+      mkdir -p /mnt/efs &&
+      mount -t nfs4 -o nfsvers=4.1 fs-015fb9d53f7395e8d.efs.us-east-1.amazonaws.com:/ /mnt/efs &&
+      echo 'Configuración completada.'
+      "
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints:
+          - node.role == manager
+
+volumes:
+  db_data:
+
+networks:
+  bookstore_net:
+    driver: overlay
+
