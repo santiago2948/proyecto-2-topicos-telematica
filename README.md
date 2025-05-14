@@ -167,7 +167,7 @@ Utilizar la aplicación monolítica y hacer el despliegue respectivo en un clust
       ```
       server {
           listen 80;
-          server_name TU_DOMINIO;
+          server_name telematica-libros.shop;
 
           location / {
               proxy_pass http://localhost:80;
@@ -210,10 +210,10 @@ Utilizar la aplicación monolítica y hacer el despliegue respectivo en un clust
     - Elige un *Launch Template* o *Launch Configuration* con:
         - **AMI**: Ubuntu 22.04
         - **Tipo de instancia**: t3.small (o similar)
-        - **User Data**:  
-          _Pega aquí tu script de user data para instalar Docker, Docker Compose, montar EFS, clonar el repo y levantar el contenedor._
-          ```
-          #!/bin/bash
+          #### User Data:
+
+```bash
+#!/bin/bash
 
 # Actualiza el sistema
 sudo apt update -y
@@ -247,7 +247,7 @@ sudo docker run -d --restart always -p 80:80 --name monolitic-server \
 -e DB_PASS=Salinitrato10. \
 -e DB_NAME=bookstore \
 -v /mnt/efs:/mnt/efs pythonMonolitic/latest
-          ```
+```
         - **Security Groups**: Permitir puertos 80, 443, y acceso a EFS y RDS.
     - Configura el grupo con:
         - **Mínimo**: 2 instancias
