@@ -7,11 +7,10 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secretkey'
 
 # Configuración dinámica de la base de datos
-db_user = os.environ.get('DB_USER')
-db_pass = os.environ.get('DB_PASS')
-db_host = os.environ.get('DB_HOST')
-db_name = os.environ.get('DB_NAME')
-
+db_user = 'admin'
+db_pass = '12345678'
+db_host = 'database-objective-2.c9wuu22ec2ri.us-east-1.rds.amazonaws.com'
+db_name = 'bookstore'
 
 app.config['SQLALCHEMY_DATABASE_URI'] = f'mysql+pymysql://{db_user}:{db_pass}@{db_host}/{db_name}'
 
