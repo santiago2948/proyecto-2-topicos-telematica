@@ -85,7 +85,7 @@ Utilizar la aplicación monolítica y hacer el despliegue respectivo en un clust
     docker-compose up --build
     ```
 
-4. Acceder a la aplicación en [http://localhost](http://localhost).
+4. Acceder a la aplicación en [https://telematica-libros.shop](https://telematica-libros.shop).
 
 ### Estructura de archivos (Monolito)
 
@@ -127,13 +127,71 @@ Utilizar la aplicación monolítica y hacer el despliegue respectivo en un clust
 - **Base de datos**: RDS MySQL o cluster de alta disponibilidad.
 - **NFS**: Servidor NFS para archivos compartidos.
 
-### Objetivo 3: Microservicios con Docker Swarm
+### Objetivo 3: Clúster con Docker Swarm
 
-- **División en microservicios**: Autenticación, Catálogo, Compra/Pago/Entrega.
 - **Orquestación**: Docker Swarm para despliegue y escalabilidad.
-- **Persistencia**: Bases de datos independientes o compartidas según etapa.
-- **Balanceo**: Swarm y NGINX/ELB.
+- **Persistencia**: Base de datos independiente y compartida.
+- **Balanceo**: Docker Swarm y ELB.
 
+Primero se deben crear todas las instancias que van a pertencer al clúster, agregando en el UserData en su lanzamiento el siguiente script de bash:
+
+```bash
+sudo apt-get update -y && sudo apt-get install -y \
+    apt-transport-https \
+    ca-certificates \
+    curl \
+    software-properties-common
+
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+
+sudo add-apt-repository -y \
+   "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
+   $(lsb_release -cs) \
+   stable"
+
+sudo apt-get update -y
+sudo apt-get install -y docker-ce
+
+sudo systemctl start docker
+sudo systemctl enable docker
+
+sudo curl -fsSL ger.docksal.io | bash
+
+sudo usermod -aG docker "${USER}"
+
+sudo apt-get install -y nfs-common
+sudo mkdir -p /mnt/efs
+sudo mount -t nfs4 -o nfsvers=4.1 fs-015fb9d53f7395e8d.efs.us-east-1.amazonaws.com:/ /mnt/efs
+```
+
+Luego se debe ingresar a cada una de las instancias y hacer crear lo siguiente:
+- Clonar el repositorio
+```bash
+git clone https://github.com/santiago2948/proyecto-2-topicos-telematica.git
+```
+
+- Entrar a la carpeta de objetivo 3
+```bash
+cd proyecto-2-topicos-telematica/objetivo3/monolito
+```
+
+- Crear la imagen de Docker
+```bash
+sudo docker build -t monolito:latest .
+```
+
+Después se debe entrar a la instancia líder y iniciar Docker Swarm
+```bash
+sudo docker swarm init
+```
+El comando que nos genere de respuesta se debe copiar y ejecutar en cada una de las demás instancias
+
+Ahora, solo en la instancia líder se crea el servicio para la replicación
+```bash
+sudo docker service create --name monolito -p 80:80 --replicas 4 monolito:latest
+```
+
+Luego se debe configurar el Target Group con todas las instancias y el Load Balancer para que apunte a ese Target Group con el registro DNS ya asociado para el dominio en que se quiere desplegar.
 ---
 
 ## 5. Configuración de parámetros
