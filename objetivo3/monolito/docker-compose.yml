@@ -26,12 +26,8 @@ services:
   flaskapp:
     build: .
     restart: always
-    environment:
-      - FLASK_ENV=development
-      - DB_HOST=${DB_HOST:-database-objective-2.c9wuu22ec2ri.us-east-1.rds.amazonaws.com}
-      - DB_USER=${DB_USER:-admin}
-      - DB_PASS=${DB_PASS:-12345678}
-      - DB_NAME=${DB_NAME:-bookstore}
+    env_file: 
+      - .env  # Carga las variables de entorno desde el archivo .env
     ports:
       - "80:80"
     depends_on:
@@ -55,6 +51,8 @@ services:
     volumes:
       - .:/app
     working_dir: /app
+    env_file:
+      - .env
     entrypoint: >
       sh -c "
       apt-get update &&
@@ -78,6 +76,8 @@ services:
     volumes:
       - .:/app
     working_dir: /app
+    env_file:
+      - .env
     entrypoint: >
       sh -c "
       echo 'Verificando configuración de Docker Swarm...' &&
